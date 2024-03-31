@@ -23,6 +23,11 @@ app.use(
   })
 );
 
+/* Import route */
+const userRoute = require("./routes/user.route.js");
+
+/* Route declare */
+app.use("/users", userRoute);
 /* connect DB */
 
 dbConnect()
