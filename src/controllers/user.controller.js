@@ -5,6 +5,7 @@ const user = require("../models/user.model.js");
 const upload = require("../middlewares/multer.middleware.js");
 const cloudinary = require("../utils/cloudinary.js");
 const jwt = require("jsonwebtoken");
+const { use } = require("../routes/user.route.js");
 
 const saveAccessAndRefreshToken = async (userid) => {
   try {
@@ -170,6 +171,55 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(new apiResponse(200, req.user, "User fetched successfully"));
+});
+
+const getUserChannel = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username) {
+    throw new apiError(401, "Username does not exists");
+  }
+  const channel = await user.aggregate([
+    {
+      $match: {
+        username: username,
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscriberCount: {
+          $size: "$subscribers",
+        },
+        subscribedToCount: {
+          $size: "$subscribedTo",
+        },
+      },
+    },
+  ]);
+  if (!channel?.length) {
+    throw new apiError(404, "Channel does not exists");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new apiResponse(200, channel[0], "User channel fetched successfully")
+    );
 });
 /* const createdUser = await user
   .findById(Saveduser._id)
