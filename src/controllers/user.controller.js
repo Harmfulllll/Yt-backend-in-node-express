@@ -231,4 +231,5 @@ module.exports = {
   refreshAccessToken,
   changeCurrentPassword,
   getCurrentUser,
+  getUserChannel,
 };
